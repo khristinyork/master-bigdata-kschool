@@ -99,8 +99,8 @@ public class SparkMainForEachWriter {
 		ds4.printSchema();
 		StreamingQuery query2 = ds4
 				 .select(ds4.col("id"),ds4.col("max(temp)"),
-						 ds4.col("lon"),ds4.col("lat"),ds4.col("min(temp)"),
-						 ds4.col("avg(pressure)"),ds4.col("avg(humidity)"),ds4.col("window.start"))
+				  ds4.col("lon"),ds4.col("lat"),ds4.col("min(temp)"),
+				  ds4.col("avg(pressure)"),ds4.col("avg(humidity)"),ds4.col("window.start"))
 				.writeStream()
 				.foreach(new InserterForEach())
 				.outputMode(OutputMode.Complete())
