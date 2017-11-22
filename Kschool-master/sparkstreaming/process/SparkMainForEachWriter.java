@@ -35,7 +35,7 @@ public class SparkMainForEachWriter {
 	static String windowDuration = 2 + " seconds";// 30 minutos
 	static String slideDuration = 1 + " seconds";// 1 minutos
 	//Kafka
-	public static String IPKAFKA = "34.224.28.222";
+	public static String IPKAFKA = "34.228.65.2";
 	public static String KAFKA_HOST = IPKAFKA + ":9090," + IPKAFKA + ":9091," + IPKAFKA + ":9092";
 	public static String TOPIC = "wtopic";
 	public static String TOPIC2MONGO = "topicFromKafkaToMongo";
@@ -71,11 +71,13 @@ public class SparkMainForEachWriter {
 		SparkContext sparkContext = new SparkContext(conf);
 		sparkContext.setCheckpointDir("/media/bigdata/sda6/opt/HDFS");
 		SparkSession sparkSession = SparkSession.builder().config(conf).getOrCreate();
+		
 	    sparkSession.sqlContext().setConf("spark.sql.shuffle.partitions", "3");
 	    //Leemos desde kafka los datos y los cargamos en un dataset
 		Dataset<Row> ds1 = sparkSession.readStream().format("kafka").option("kafka.bootstrap.servers", KAFKA_HOST)
 				.option("subscribe", TOPIC).option("startingOffsets", "earliest").load();
 		//Creamos una funcion de usuario que deserializa los datos y los formatea a un schema avro 
+		
 		sparkSession.udf().register("deserialize", (byte[] data) -> {
 			GenericRecord record = recordInjection.invert(data).get();
 			return RowFactory.create(record.get("id"), record.get("lon"), record.get("lat"), record.get("temp"),
@@ -89,14 +91,16 @@ public class SparkMainForEachWriter {
 		ds2.printSchema();
 	    
 	
-		Dataset<Row> ds4 = ds2.groupBy(functions.window(ds2.col("datetime").cast(("Timestamp")),windowDuration,slideDuration),ds2.col("id"),ds2.col("lon"),ds2.col("lat")).agg(
+		Dataset<Row> ds4b = ds2.groupBy(functions.window(ds2.col("datetime").cast(("Timestamp")),windowDuration,slideDuration),ds2.col("id"),ds2.col("lon"),ds2.col("lat")).agg(
 				org.apache.spark.sql.functions.avg(ds2.col("humidity")),
 				org.apache.spark.sql.functions.avg(ds2.col("pressure")),
 				org.apache.spark.sql.functions.min(ds2.col("temp")),
 				org.apache.spark.sql.functions.max(ds2.col("temp"))
 				);
 	
-		ds4.printSchema();
+		ds4b.printSchema();
+		//particionamos los datos en tres (solucion al cuello de botella que tenemos en la maquina del cluster kafka)
+		Dataset<Row> ds4=ds4b.repartition(3);
 		StreamingQuery query2 = ds4
 				 .select(ds4.col("id"),ds4.col("max(temp)"),
 				  ds4.col("lon"),ds4.col("lat"),ds4.col("min(temp)"),
