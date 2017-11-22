@@ -32,12 +32,12 @@ public class InserterForEach extends ForeachWriter<Row> implements Serializable{
 	Connection con;
 	@Override
 	public void close(Throwable arg0) {
-    try {
-			
-		}catch(Exception ex) {System.out.println(ex.toString());} 
-		finally {
-			this.mongoclient.close();
-		}
+//    try {
+//			
+//		}catch(Exception ex) {System.out.println(ex.toString());} 
+//		finally {
+//			this.mongoclient.close();
+//		}
 	}
 
 	@Override
@@ -51,10 +51,10 @@ public class InserterForEach extends ForeachWriter<Row> implements Serializable{
 	         try {
 				System.out.println("ROW: " + fila.toString());
 				
-				 this.mongoclient = new MongoClient(Ip, 27017);
-				 this.db = this.mongoclient.getDB(dbNameMongo);
-				 this.table1 = this.db.getCollection(collectionName);
-				 this.document = new BasicDBObject();
+//				 this.mongoclient = new MongoClient(Ip, 27017);
+//				 this.db = this.mongoclient.getDB(dbNameMongo);
+//				 this.table1 = this.db.getCollection(collectionName);
+//				 this.document = new BasicDBObject();
 				 
 				 Class.forName("com.mysql.jdbc.Driver").newInstance();
 				 String sURL = "jdbc:mysql://192.168.1.225:3306/"+databaseMysql;
@@ -67,35 +67,38 @@ public class InserterForEach extends ForeachWriter<Row> implements Serializable{
 				 mes=new Integer(fecha[1]).intValue();
 				 String[] diaaux=fecha[2].split(" ");
 				 dia= new Integer(diaaux[0]).intValue();
+				 //max, log,id,lat,
+				 // [280,43,3028258,3,43,279.0,1021.0,2017-11-20 20:59:59.0]
 				 String query = " insert into tablemeasure (idcity, maxtemp, mintemp, avghumed, avgpres,start_window)" + " values (?, ?, ?, ?, ?,?)";
 				 preparedStmt = con.prepareStatement(query);
 				 preparedStmt.setInt(1, new Integer(fila.get(2).toString()).intValue());
-				 preparedStmt.setInt(2, new Integer(fila.get(0).toString()).intValue());
-				 preparedStmt.setInt(3, new Integer(fila.get(4).toString()).intValue());
+				 preparedStmt.setInt(2, (new Integer(fila.get(0).toString()).intValue())-273);
+				 preparedStmt.setInt(3, (new Integer(fila.get(4).toString()).intValue())-273);
 				 preparedStmt.setFloat(4, new Float(fila.get(5).toString()).floatValue());
 				 preparedStmt.setFloat(5, new Float(fila.get(6).toString()).floatValue());
-				 preparedStmt.setDate(6,new Date(año,mes,dia));
+				 preparedStmt.setTimestamp(6,fila.getTimestamp(7));
 				 preparedStmt.execute();
 				 preparedStmt.close();
 				 con.close();
 					
 				//ROW: [291,-26,934985,31,-26,291.0,920.0]
 				//datos a insertar en tabla de mongodb llamada  tablaprincipal
-				 document.put("maxtemp", fila.get(0));
-				 document.put("lat", fila.get(1));
-				 document.put("idcity", fila.get(2));
-				 document.put("log", fila.get(3));	
-				 document.put("mintemp", fila.get(4));
-				 document.put("avghumed", fila.get(5));				 
-				 document.put("avgpres", fila.get(6));
-				 document.put("start_window", fila.get(7));
-  			     this.table1.insert(document);
+//				 document.put("maxtemp", fila.get(0));
+//				 document.put("lat", fila.get(1));
+//				 document.put("idcity", fila.get(2));
+//				 document.put("log", fila.get(3));	
+//				 document.put("mintemp", fila.get(4));
+//				 document.put("avghumed", fila.get(5));				 
+//				 document.put("avgpres", fila.get(6));
+//				 document.put("start_window", fila.get(7));
+//  			     this.table1.insert(document);
 			} catch (Exception e) {				
 				e.printStackTrace();
-			}finally {
-				this.mongoclient.close();
-				
 			}
+//	         finally {
+//				this.mongoclient.close();
+//				
+//			}
 	}
 
 }
